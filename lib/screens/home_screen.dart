@@ -17,12 +17,19 @@ class HomeScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.black
+            : Colors.white,
         appBar: AppBar(
-        title: const Text('宝可梦图鉴'),
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
-      body: Column(
+          title: const Text('宝可梦图鉴'),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? Colors.black
+              : Colors.white,
+        ),
+        body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -131,7 +138,9 @@ class _PokemonListItemState extends State<PokemonListItem> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+          border: Border(
+              bottom: BorderSide(
+                  color: Theme.of(context).dividerColor.withOpacity(0.1))),
         ),
         child: Row(
           children: [
@@ -155,7 +164,10 @@ class _PokemonListItemState extends State<PokemonListItem> {
               height: 50,
               child: CachedNetworkImage(
                 imageUrl: widget.pokemon.imageUrl,
-                placeholder: (context, url) => Container(color: Colors.grey[100]),
+                placeholder: (context, url) => Container(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.grey[200]),
                 errorWidget: (context, url, error) => const Icon(Icons.error, size: 20, color: Colors.grey),
                 fit: BoxFit.contain,
               ),

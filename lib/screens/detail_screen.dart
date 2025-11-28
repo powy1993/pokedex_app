@@ -277,7 +277,7 @@ class _DetailScreenState extends State<DetailScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -505,9 +505,10 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
           SliverToBoxAdapter(
             child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(30)),
               ),
               child: Padding(
                 padding: EdgeInsets.only(
@@ -540,7 +541,9 @@ class _DetailScreenState extends State<DetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withOpacity(0.05)
+                            : Colors.grey[50],
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -624,10 +627,10 @@ class _DetailScreenState extends State<DetailScreen> {
                     ],
 
                     // Level Up Moves
-                    const Text(
+                    Text(
                       '升级技能',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),
@@ -652,10 +655,10 @@ class _DetailScreenState extends State<DetailScreen> {
                     const SizedBox(height: 24),
 
                     // Machine Moves
-                    const Text(
+                    Text(
                       '招式机器',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.titleLarge?.color,
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),
@@ -753,7 +756,9 @@ class _DetailScreenState extends State<DetailScreen> {
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: stat.baseStat / 255,
-                backgroundColor: Colors.grey[200],
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.grey[200],
                 color: color,
                 minHeight: 6,
               ),
@@ -812,9 +817,12 @@ class AbilityTile extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.grey[50],
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+            border: Border.all(
+                color: Theme.of(context).dividerColor.withOpacity(0.1)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -833,12 +841,15 @@ class AbilityTile extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withOpacity(0.1)
+                            : Colors.grey[200],
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
+                      child: Text(
                         '隐藏',
-                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                        style: TextStyle(
+                            fontSize: 10, color: Theme.of(context).hintColor),
                       ),
                     ),
                   ],
@@ -873,7 +884,9 @@ class MoveTable extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.grey[200],
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -1009,7 +1022,9 @@ class MoveTableRow extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+              border: Border(
+                  bottom: BorderSide(
+                      color: Theme.of(context).dividerColor.withOpacity(0.1))),
             ),
             child: Row(
               children: [
@@ -1187,10 +1202,10 @@ class _CompetitiveSectionState extends State<CompetitiveSection> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               '竞技对战',
               style: TextStyle(
-                color: Colors.black,
+                color: Theme.of(context).textTheme.titleLarge?.color,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -1199,7 +1214,9 @@ class _CompetitiveSectionState extends State<CompetitiveSection> {
               value: _selectedGen,
               underline: const SizedBox(),
               icon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
-              style: const TextStyle(color: Colors.black, fontSize: 14),
+              style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  fontSize: 14),
               items: _genNames.entries.map((entry) {
                 return DropdownMenuItem<String>(
                   value: entry.key,
@@ -1304,9 +1321,12 @@ class _CompetitiveSectionState extends State<CompetitiveSection> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withOpacity(0.05)
+            : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1396,10 +1416,10 @@ class _CompetitiveSectionState extends State<CompetitiveSection> {
           ),
           Expanded(
             child: DefaultTextStyle(
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold, 
                 fontSize: 14,
-                color: Colors.black87,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
               child: content,
             ),
@@ -1479,7 +1499,7 @@ void showMoveDetails(BuildContext context, Map<String, dynamic> data) {
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -1653,46 +1673,63 @@ class EvolutionNodeWidget extends StatelessWidget {
     final imageUrl =
         'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${node.speciesId}.png';
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: isCurrent
-                  ? Colors.blue.withValues(alpha: 0.1)
-                  : Colors.grey[100],
-              shape: BoxShape.circle,
-              border:
-                  isCurrent ? Border.all(color: Colors.blue, width: 2) : null,
-            ),
-            child: CachedNetworkImage(
-              imageUrl: imageUrl,
-              fit: BoxFit.contain,
-              placeholder: (context, url) => const Padding(
-                padding: EdgeInsets.all(20.0),
-                child: CircularProgressIndicator(strokeWidth: 2),
+    return GestureDetector(
+      onTap: isCurrent
+          ? null
+          : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetailScreen(pokemonId: node.speciesId),
+                ),
+              );
+            },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        child: Column(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: isCurrent
+                    ? Colors.blue.withValues(alpha: 0.1)
+                    : (Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.grey[100]),
+                shape: BoxShape.circle,
+                border:
+                    isCurrent ? Border.all(color: Colors.blue, width: 2) : null,
               ),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.contain,
+                placeholder: (context, url) => const Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          FutureBuilder<String?>(
-              future: PokeService()
-                  .translateTerm(node.speciesName, 'pokemon-species'),
-              builder: (context, snapshot) {
-                return Text(
-                  snapshot.data ?? node.speciesName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                    color: isCurrent ? Colors.blue : Colors.black,
-                  ),
-                );
-              }),
-        ],
+            const SizedBox(height: 4),
+            FutureBuilder<String?>(
+                future: PokeService()
+                    .translateTerm(node.speciesName, 'pokemon-species'),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.data ?? node.speciesName,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight:
+                          isCurrent ? FontWeight.bold : FontWeight.normal,
+                      color: isCurrent
+                          ? Colors.blue
+                          : Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  );
+                }),
+          ],
+        ),
       ),
     );
   }
