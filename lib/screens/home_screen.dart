@@ -93,6 +93,17 @@ class _PokemonListItemState extends State<PokemonListItem> {
     _loadTypes();
   }
 
+  @override
+  void didUpdateWidget(PokemonListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.pokemon.id != widget.pokemon.id) {
+      setState(() {
+        _types = null;
+      });
+      _loadTypes();
+    }
+  }
+
   Future<void> _loadTypes() async {
     try {
       final detail = await _service.getPokemonDetail(widget.pokemon.id);

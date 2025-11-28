@@ -20,6 +20,7 @@ class _DetailScreenState extends State<DetailScreen> {
   
   PokemonDetail? _detail;
   PokemonSpecies? _species;
+  EvolutionChain? _evolutionChain;
   PokemonVariety? _selectedVariety;
   bool _isLoading = true;
   String? _error;
@@ -101,9 +102,18 @@ class _DetailScreenState extends State<DetailScreen> {
     try {
       final detail = await _service.getPokemonDetail(widget.pokemonId);
       final species = await _service.getPokemonSpecies(widget.pokemonId);
+      EvolutionChain? evolutionChain;
+      if (species.evolutionChainUrl.isNotEmpty) {
+        try {
+          evolutionChain =
+              await _service.getEvolutionChain(species.evolutionChainUrl);
+        } catch (e) {
+          print('Error loading evolution chain: $e');
+        }
+      }
       
       if (mounted) {
-        _processData(detail, species);
+        _processData(detail, species, evolutionChain);
       }
     } catch (e) {
       if (mounted) {
@@ -115,7 +125,8 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
-  void _processData(PokemonDetail detail, PokemonSpecies species) {
+  void _processData(PokemonDetail detail, PokemonSpecies species,
+      EvolutionChain? evolutionChain) {
     final groups = <String>{};
     for (var move in detail.moves) {
       for (var version in move.versionDetails) {
@@ -145,6 +156,7 @@ class _DetailScreenState extends State<DetailScreen> {
     setState(() {
       _detail = detail;
       _species = species;
+      _evolutionChain = evolutionChain;
       _selectedVariety = currentVariety;
       _availableVersionGroups = availableGroups;
       if (_selectedVersionGroup == null ||
@@ -167,7 +179,7 @@ class _DetailScreenState extends State<DetailScreen> {
     try {
       final detail = await _service.getPokemonDetail(newVariety.id);
       if (mounted && _species != null) {
-        _processData(detail, _species!);
+        _processData(detail, _species!, _evolutionChain);
       }
     } catch (e) {
       if (mounted) {
@@ -420,7 +432,10 @@ class _DetailScreenState extends State<DetailScreen> {
                               runSpacing: 8,
                               children: _detail!.types.map((type) {
                                 return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  padding: _detail!.types.length == 1
+                                      ? EdgeInsets.zero
+                                      : const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: typeColors[type] ?? Colors.grey,
                                     borderRadius: BorderRadius.circular(20),
@@ -590,7 +605,23 @@ class _DetailScreenState extends State<DetailScreen> {
                     
                     const SizedBox(height: 24),
 
-
+                    // Evolution
+                    if (_evolutionChain != null &&
+                        _evolutionChain!.chain.evolvesTo.isNotEmpty) ...[
+                      Text(
+                        '进化链',
+                        style: TextStyle(
+                          color: bgColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      EvolutionSection(
+                          chain: _evolutionChain!,
+                          currentPokemonId: _detail!.id),
+                      const SizedBox(height: 24),
+                    ],
 
                     // Level Up Moves
                     const Text(
@@ -1538,4 +1569,279 @@ Widget _buildInfoColumn(String label, String value) {
       ),
     ],
   );
+}
+
+class EvolutionSection extends StatelessWidget {
+  final EvolutionChain chain;
+  final int currentPokemonId;
+
+  const EvolutionSection({
+    super.key,
+    required this.chain,
+    required this.currentPokemonId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: _buildEvolutionTree(context, chain.chain),
+      ),
+    );
+  }
+
+  List<Widget> _buildEvolutionTree(BuildContext context, EvolutionNode node) {
+    List<Widget> widgets = [];
+
+    // Current Node
+    widgets.add(EvolutionNodeWidget(
+      node: node,
+      isCurrent: node.speciesId == currentPokemonId,
+    ));
+
+    if (node.evolvesTo.isNotEmpty) {
+      // If there are multiple evolutions (e.g. Eevee), we stack them vertically
+      // But for a simple row view, maybe we just show them sequentially or branching?
+      // Let's try a column of rows for the next steps if there are multiple.
+
+      if (node.evolvesTo.length == 1) {
+        // Linear evolution
+        // Show details on the arrow? Or just next to it.
+        // Let's put details before the next node.
+        widgets.add(EvolutionDetailsWidget(
+            details: node.evolvesTo.first.evolutionDetails));
+        widgets.addAll(_buildEvolutionTree(context, node.evolvesTo.first));
+      } else {
+        // Branching evolution
+        widgets.add(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: node.evolvesTo.map((nextNode) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    EvolutionDetailsWidget(details: nextNode.evolutionDetails),
+                    ..._buildEvolutionTree(context, nextNode),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+}
+
+class EvolutionNodeWidget extends StatelessWidget {
+  final EvolutionNode node;
+  final bool isCurrent;
+
+  const EvolutionNodeWidget({
+    super.key,
+    required this.node,
+    required this.isCurrent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl =
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${node.speciesId}.png';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: isCurrent
+                  ? Colors.blue.withValues(alpha: 0.1)
+                  : Colors.grey[100],
+              shape: BoxShape.circle,
+              border:
+                  isCurrent ? Border.all(color: Colors.blue, width: 2) : null,
+            ),
+            child: CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.contain,
+              placeholder: (context, url) => const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            ),
+          ),
+          const SizedBox(height: 4),
+          FutureBuilder<String?>(
+              future: PokeService()
+                  .translateTerm(node.speciesName, 'pokemon-species'),
+              builder: (context, snapshot) {
+                return Text(
+                  snapshot.data ?? node.speciesName,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                    color: isCurrent ? Colors.blue : Colors.black,
+                  ),
+                );
+              }),
+        ],
+      ),
+    );
+  }
+}
+
+class EvolutionDetailsWidget extends StatelessWidget {
+  final List<EvolutionDetail> details;
+  final PokeService _service = PokeService();
+
+  EvolutionDetailsWidget({super.key, required this.details});
+
+  @override
+  Widget build(BuildContext context) {
+    if (details.isEmpty) return const SizedBox();
+
+    return FutureBuilder<List<String>>(
+        future: _getAllTranslatedTexts(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const SizedBox();
+
+          final texts = snapshot.data!;
+          if (texts.isEmpty) return const SizedBox();
+
+          return Container(
+            constraints: const BoxConstraints(maxWidth: 120),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              children: [
+                const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+                Text(
+                  texts.join('\n或\n'),
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                  maxLines: 20,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        });
+  }
+
+  Future<List<String>> _getAllTranslatedTexts() async {
+    final futures = details.map((d) => _getTranslatedText(d));
+    final results = await Future.wait(futures);
+    return results.where((s) => s.isNotEmpty).toSet().toList();
+  }
+
+  Future<String> _getTranslatedText(EvolutionDetail detail) async {
+    List<String> conditions = [];
+
+    // Trigger specific base text
+    if (detail.trigger == 'level-up') {
+      if (detail.minLevel != null) {
+        conditions.add('Lv.${detail.minLevel}');
+      } else {
+        conditions.add('等级提升');
+      }
+    } else if (detail.trigger == 'use-item') {
+      if (detail.item != null) {
+        final itemName =
+            await _service.translateTerm(detail.item!, 'item') ?? detail.item!;
+        conditions.add('使用 $itemName');
+      }
+    } else if (detail.trigger == 'trade') {
+      conditions.add('通信交换');
+    } else if (detail.trigger == 'shed') {
+      conditions.add('队伍有空位且有精灵球');
+    } else if (detail.trigger == 'spin') {
+      conditions.add('旋转');
+    } else if (detail.trigger == 'tower-of-darkness') {
+      conditions.add('在恶之塔挂轴前');
+    } else if (detail.trigger == 'tower-of-waters') {
+      conditions.add('在水之塔挂轴前');
+    } else if (detail.trigger == 'three-critical-hits') {
+      conditions.add('一场战斗击中要害3次');
+    } else if (detail.trigger == 'take-damage') {
+      conditions.add('受到伤害后');
+    } else {
+      conditions.add(detail.trigger);
+    }
+
+    // Extra conditions
+    if (detail.minHappiness != null) {
+      conditions.add('亲密度${detail.minHappiness}');
+    }
+    if (detail.minBeauty != null) {
+      conditions.add('美丽度${detail.minBeauty}');
+    }
+    if (detail.minAffection != null) {
+      conditions.add('友好度${detail.minAffection}');
+    }
+    if (detail.timeOfDay != null && detail.timeOfDay!.isNotEmpty) {
+      conditions.add(detail.timeOfDay == 'day' ? '白天' : '夜晚');
+    }
+    if (detail.gender != null) {
+      conditions.add(detail.gender == 1 ? '♀' : '♂');
+    }
+    if (detail.heldItem != null) {
+      final itemName = await _service.translateTerm(detail.heldItem!, 'item') ??
+          detail.heldItem!;
+      conditions.add('携带 $itemName');
+    }
+    if (detail.knownMove != null) {
+      final moveName =
+          await _service.translateTerm(detail.knownMove!, 'move') ??
+              detail.knownMove!;
+      conditions.add('学会 $moveName');
+    }
+    if (detail.knownMoveType != null) {
+      final typeName =
+          typeTranslations[detail.knownMoveType!] ?? detail.knownMoveType!;
+      conditions.add('学会$typeName属性招式');
+    }
+    if (detail.location != null) {
+      conditions.add('在 ${detail.location}');
+    }
+    if (detail.needsOverworldRain) {
+      conditions.add('下雨时');
+    }
+    if (detail.turnUpsideDown) {
+      conditions.add('倒置设备');
+    }
+    if (detail.partySpecies != null) {
+      final speciesName = await _service.translateTerm(
+              detail.partySpecies!, 'pokemon-species') ??
+          detail.partySpecies!;
+      conditions.add('队伍中有 $speciesName');
+    }
+    if (detail.partyType != null) {
+      final typeName = typeTranslations[detail.partyType!] ?? detail.partyType!;
+      conditions.add('队伍中有$typeName属性宝可梦');
+    }
+    if (detail.tradeSpecies != null) {
+      final speciesName = await _service.translateTerm(
+              detail.tradeSpecies!, 'pokemon-species') ??
+          detail.tradeSpecies!;
+      conditions.add('与 $speciesName 交换');
+    }
+    if (detail.relativePhysicalStats != null) {
+      if (detail.relativePhysicalStats == 1) {
+        conditions.add('攻击 > 防御');
+      } else if (detail.relativePhysicalStats == -1) {
+        conditions.add('防御 > 攻击');
+      } else {
+        conditions.add('攻击 = 防御');
+      }
+    }
+
+    return conditions.join('\n+ ');
+  }
 }

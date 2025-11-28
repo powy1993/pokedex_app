@@ -71,6 +71,16 @@ class PokeService {
     }
   }
 
+  Future<EvolutionChain> getEvolutionChain(String url) async {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      return EvolutionChain.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load evolution chain');
+    }
+  }
+
   Future<Map<String, String>> getAbilityInfo(String url) async {
     // Resolve local data
     Map<String, dynamic>? localData;
@@ -151,7 +161,10 @@ class PokeService {
   static List<PokemonListEntry> _parsePokemonList(String responseBody) {
     final data = json.decode(responseBody);
     final List results = data['results'];
-    return results.map((json) => PokemonListEntry.fromJson(json)).toList();
+    return results
+        .map((json) => PokemonListEntry.fromJson(json))
+        .where((entry) => entry.id < 10000)
+        .toList();
   }
 
   Future<Map<String, dynamic>> getMoveDetails(String url, {String? versionGroup}) async {

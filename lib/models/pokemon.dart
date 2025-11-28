@@ -200,6 +200,7 @@ class PokemonSpecies {
   final String growthRate;
   final int hatchCounter;
   final List<PokemonVariety> varieties;
+  final String evolutionChainUrl;
 
   PokemonSpecies({
     required this.name,
@@ -213,6 +214,7 @@ class PokemonSpecies {
     required this.growthRate,
     required this.hatchCounter,
     required this.varieties,
+    required this.evolutionChainUrl,
   });
 
   factory PokemonSpecies.fromJson(Map<String, dynamic> json) {
@@ -260,6 +262,117 @@ class PokemonSpecies {
               ?.map((v) => PokemonVariety.fromJson(v))
               .toList() ??
           [],
+      evolutionChainUrl: json['evolution_chain'] != null ? json['evolution_chain']['url'] : '',
+    );
+  }
+}
+
+class EvolutionChain {
+  final EvolutionNode chain;
+
+  EvolutionChain({required this.chain});
+
+  factory EvolutionChain.fromJson(Map<String, dynamic> json) {
+    return EvolutionChain(
+      chain: EvolutionNode.fromJson(json['chain']),
+    );
+  }
+}
+
+class EvolutionNode {
+  final String speciesName;
+  final String speciesUrl;
+  final List<EvolutionNode> evolvesTo;
+  final List<EvolutionDetail> evolutionDetails;
+
+  EvolutionNode({
+    required this.speciesName,
+    required this.speciesUrl,
+    required this.evolvesTo,
+    required this.evolutionDetails,
+  });
+
+  factory EvolutionNode.fromJson(Map<String, dynamic> json) {
+    return EvolutionNode(
+      speciesName: json['species']['name'],
+      speciesUrl: json['species']['url'],
+      evolvesTo: (json['evolves_to'] as List)
+          .map((e) => EvolutionNode.fromJson(e))
+          .toList(),
+      evolutionDetails: (json['evolution_details'] as List)
+          .map((d) => EvolutionDetail.fromJson(d))
+          .toList(),
+    );
+  }
+
+  int get speciesId {
+    final uri = Uri.parse(speciesUrl);
+    final segments = uri.pathSegments;
+    return int.parse(segments[segments.length - 2]);
+  }
+}
+
+class EvolutionDetail {
+  final String? item;
+  final String trigger;
+  final int? gender;
+  final String? heldItem;
+  final String? knownMove;
+  final String? knownMoveType;
+  final String? location;
+  final int? minLevel;
+  final int? minHappiness;
+  final int? minBeauty;
+  final int? minAffection;
+  final bool needsOverworldRain;
+  final String? partySpecies;
+  final String? partyType;
+  final int? relativePhysicalStats;
+  final String? timeOfDay;
+  final String? tradeSpecies;
+  final bool turnUpsideDown;
+
+  EvolutionDetail({
+    this.item,
+    required this.trigger,
+    this.gender,
+    this.heldItem,
+    this.knownMove,
+    this.knownMoveType,
+    this.location,
+    this.minLevel,
+    this.minHappiness,
+    this.minBeauty,
+    this.minAffection,
+    required this.needsOverworldRain,
+    this.partySpecies,
+    this.partyType,
+    this.relativePhysicalStats,
+    this.timeOfDay,
+    this.tradeSpecies,
+    required this.turnUpsideDown,
+  });
+
+  factory EvolutionDetail.fromJson(Map<String, dynamic> json) {
+    return EvolutionDetail(
+      item: json['item']?['name'],
+      trigger: json['trigger']['name'],
+      gender: json['gender'],
+      heldItem: json['held_item']?['name'],
+      knownMove: json['known_move']?['name'],
+      knownMoveType: json['known_move_type']?['name'],
+      location: json['location']?['name'],
+      minLevel: json['min_level'],
+      minHappiness: json['min_happiness'],
+      minBeauty: json['min_beauty'],
+      minAffection: json['min_affection'],
+      needsOverworldRain: json['needs_overworld_rain'] ?? false,
+      partySpecies: json['party_species']?['name'],
+      partyType: json['party_type']?['name'],
+      relativePhysicalStats: json['relative_physical_stats'],
+      timeOfDay: json['time_of_day'] != '' ? json['time_of_day'] : null,
+      tradeSpecies: json['trade_species']?['name'],
+      turnUpsideDown: json['turn_upside_down'] ?? false,
     );
   }
 }
