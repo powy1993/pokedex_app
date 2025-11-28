@@ -349,7 +349,7 @@ const Map<String, String> pokemonNamesCn = {
   'cradily': '摇篮百合',
   'anorith': '太古羽虫',
   'armaldo': '太古盔甲',
-  'feebas': '笨笨鱼',
+  'feebas': '丑丑鱼',
   'milotic': '美纳斯',
   'castform': '漂浮泡泡',
   'kecleon': '变隐龙',
