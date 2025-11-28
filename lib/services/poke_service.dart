@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import '../models/pokemon.dart';
+import '../utils/move_data.dart';
+import '../utils/ability_data.dart';
 
 class PokeService {
   static const String baseUrl = 'https://pokeapi.co/api/v2';
@@ -70,30 +72,68 @@ class PokeService {
   }
 
   Future<Map<String, String>> getAbilityInfo(String url) async {
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      
-      String name = (data['names'] as List).firstWhere(
-        (n) => n['language']['name'] == 'zh-Hans',
-        orElse: () => {'name': data['name']},
-      )['name'];
+    // Resolve local data
+    Map<String, dynamic>? localData;
+    try {
+      final uri = Uri.parse(url);
+      final segments = uri.pathSegments;
+      String idOrSlug =
+          segments.last.isEmpty ? segments[segments.length - 2] : segments.last;
 
-      String flavorText = '';
-      final entries = (data['flavor_text_entries'] as List);
-      if (entries.isNotEmpty) {
-        final entry = entries.firstWhere(
-          (e) => e['language']['name'] == 'zh-Hans',
-          orElse: () => entries.firstWhere(
-            (e) => e['language']['name'] == 'en',
-            orElse: () => {'flavor_text': ''}
-          ),
-        );
-        flavorText = entry['flavor_text'].toString().replaceAll('\n', ' ');
+      if (int.tryParse(idOrSlug) != null) {
+        final id = int.parse(idOrSlug);
+        if (abilityIdToSlug.containsKey(id)) {
+          localData = abilityDetailsData[abilityIdToSlug[id]];
+        }
+      } else {
+        if (abilityDetailsData.containsKey(idOrSlug)) {
+          localData = abilityDetailsData[idOrSlug];
+        }
       }
+    } catch (_) {}
 
-      return {'name': name, 'flavorText': flavorText};
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        String name = (data['names'] as List).firstWhere(
+          (n) => n['language']['name'] == 'zh-Hans',
+          orElse: () => {'name': data['name']},
+        )['name'];
+
+        String flavorText = '';
+        final entries = (data['flavor_text_entries'] as List);
+        if (entries.isNotEmpty) {
+          final entry = entries.firstWhere(
+            (e) => e['language']['name'] == 'zh-Hans',
+            orElse: () => entries.firstWhere(
+                (e) => e['language']['name'] == 'en',
+                orElse: () => {'flavor_text': ''}),
+          );
+          flavorText = entry['flavor_text'].toString().replaceAll('\n', ' ');
+        }
+
+        // Overwrite with local data if available
+        if (localData != null) {
+          name = localData['name'];
+          flavorText = localData['description'];
+        }
+
+        return {'name': name, 'flavorText': flavorText};
+      }
+    } catch (e) {
+      print('Error fetching ability info: $e');
     }
+
+    // Fallback to local data
+    if (localData != null) {
+      return {
+        'name': localData['name'],
+        'flavorText': localData['description']
+      };
+    }
+
     return {'name': 'Unknown', 'flavorText': ''};
   }
 
@@ -115,68 +155,119 @@ class PokeService {
   }
 
   Future<Map<String, dynamic>> getMoveDetails(String url, {String? versionGroup}) async {
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      String name = (data['names'] as List).firstWhere(
-        (n) => n['language']['name'] == 'zh-Hans',
-        orElse: () => {'name': data['name']},
-      )['name'];
-      
-      String damageClass = data['damage_class']['name']; // physical, special, status
-      String type = data['type']['name'];
-      int? power = data['power'];
-      int? accuracy = data['accuracy'];
-      int? pp = data['pp'];
-      
-      String flavorText = '';
-      final entries = (data['flavor_text_entries'] as List);
-      if (entries.isNotEmpty) {
-        final entry = entries.firstWhere(
-          (e) => e['language']['name'] == 'zh-Hans',
-          orElse: () => entries.firstWhere(
-            (e) => e['language']['name'] == 'en',
-            orElse: () => {'flavor_text': ''}
-          ),
-        );
-        flavorText = entry['flavor_text'].toString().replaceAll('\n', ' ');
-      }
+    // Resolve local data
+    Map<String, dynamic>? localData;
+    try {
+      final uri = Uri.parse(url);
+      final segments = uri.pathSegments;
+      String idOrSlug =
+          segments.last.isEmpty ? segments[segments.length - 2] : segments.last;
 
-      String machineName = '';
-      if (versionGroup != null) {
-        final machines = data['machines'] as List;
-        if (machines.isNotEmpty) {
-          final machineEntry = machines.firstWhere(
-            (m) => m['version_group']['name'] == versionGroup,
-            orElse: () => null,
+      if (int.tryParse(idOrSlug) != null) {
+        final id = int.parse(idOrSlug);
+        if (moveIdToSlug.containsKey(id)) {
+          localData = moveDetailsData[moveIdToSlug[id]];
+        }
+      } else {
+        if (moveDetailsData.containsKey(idOrSlug)) {
+          localData = moveDetailsData[idOrSlug];
+        }
+      }
+    } catch (_) {}
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        String name = (data['names'] as List).firstWhere(
+          (n) => n['language']['name'] == 'zh-Hans',
+          orElse: () => {'name': data['name']},
+        )['name'];
+
+        String damageClass =
+            data['damage_class']['name']; // physical, special, status
+        String type = data['type']['name'];
+        int? power = data['power'];
+        int? accuracy = data['accuracy'];
+        int? pp = data['pp'];
+
+        String flavorText = '';
+        final entries = (data['flavor_text_entries'] as List);
+        if (entries.isNotEmpty) {
+          final entry = entries.firstWhere(
+            (e) => e['language']['name'] == 'zh-Hans',
+            orElse: () => entries.firstWhere(
+                (e) => e['language']['name'] == 'en',
+                orElse: () => {'flavor_text': ''}),
           );
-          
-          if (machineEntry != null) {
-            try {
-              final machineUrl = machineEntry['machine']['url'];
-              final machineResponse = await http.get(Uri.parse(machineUrl));
-              if (machineResponse.statusCode == 200) {
-                final machineData = json.decode(machineResponse.body);
-                machineName = machineData['item']['name'].toString().toUpperCase();
+          flavorText = entry['flavor_text'].toString().replaceAll('\n', ' ');
+        }
+
+        String machineName = '';
+        if (versionGroup != null) {
+          final machines = data['machines'] as List;
+          if (machines.isNotEmpty) {
+            final machineEntry = machines.firstWhere(
+              (m) => m['version_group']['name'] == versionGroup,
+              orElse: () => null,
+            );
+
+            if (machineEntry != null) {
+              try {
+                final machineUrl = machineEntry['machine']['url'];
+                final machineResponse = await http.get(Uri.parse(machineUrl));
+                if (machineResponse.statusCode == 200) {
+                  final machineData = json.decode(machineResponse.body);
+                  machineName =
+                      machineData['item']['name'].toString().toUpperCase();
+                }
+              } catch (e) {
+                print('Error fetching machine data: $e');
               }
-            } catch (e) {
-              print('Error fetching machine data: $e');
             }
           }
         }
+
+        // Overwrite with local data if available
+        if (localData != null) {
+          name = localData['name'];
+          damageClass = localData['damageClass'];
+          type = localData['type'];
+          power = localData['power'];
+          accuracy = localData['accuracy'];
+          pp = localData['pp'];
+          flavorText = localData['description'];
+        }
+
+        return {
+          'name': name,
+          'damageClass': damageClass,
+          'type': type,
+          'power': power,
+          'accuracy': accuracy,
+          'pp': pp,
+          'description': flavorText,
+          'machineName': machineName,
+        };
       }
-      
+    } catch (e) {
+      print('Error fetching move details: $e');
+    }
+
+    // Fallback to local data if API fails
+    if (localData != null) {
       return {
-        'name': name,
-        'damageClass': damageClass,
-        'type': type,
-        'power': power,
-        'accuracy': accuracy,
-        'pp': pp,
-        'description': flavorText,
-        'machineName': machineName,
+        'name': localData['name'],
+        'damageClass': localData['damageClass'],
+        'type': localData['type'],
+        'power': localData['power'],
+        'accuracy': localData['accuracy'],
+        'pp': localData['pp'],
+        'description': localData['description'],
+        'machineName': '',
       };
     }
+
     return {
       'name': 'Unknown', 
       'damageClass': 'status', 

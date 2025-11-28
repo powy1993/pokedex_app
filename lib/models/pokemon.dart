@@ -1,4 +1,3 @@
-
 class PokemonListEntry {
   final String name;
   final String url;
@@ -200,6 +199,7 @@ class PokemonSpecies {
   final int baseHappiness;
   final String growthRate;
   final int hatchCounter;
+  final List<PokemonVariety> varieties;
 
   PokemonSpecies({
     required this.name,
@@ -212,6 +212,7 @@ class PokemonSpecies {
     required this.baseHappiness,
     required this.growthRate,
     required this.hatchCounter,
+    required this.varieties,
   });
 
   factory PokemonSpecies.fromJson(Map<String, dynamic> json) {
@@ -255,7 +256,37 @@ class PokemonSpecies {
       baseHappiness: json['base_happiness'] ?? 0,
       growthRate: json['growth_rate'] != null ? json['growth_rate']['name'] : 'unknown',
       hatchCounter: json['hatch_counter'] ?? 0,
+      varieties: (json['varieties'] as List?)
+              ?.map((v) => PokemonVariety.fromJson(v))
+              .toList() ??
+          [],
     );
+  }
+}
+
+class PokemonVariety {
+  final bool isDefault;
+  final String name;
+  final String url;
+
+  PokemonVariety({
+    required this.isDefault,
+    required this.name,
+    required this.url,
+  });
+
+  factory PokemonVariety.fromJson(Map<String, dynamic> json) {
+    return PokemonVariety(
+      isDefault: json['is_default'],
+      name: json['pokemon']['name'],
+      url: json['pokemon']['url'],
+    );
+  }
+
+  int get id {
+    final uri = Uri.parse(url);
+    final segments = uri.pathSegments;
+    return int.parse(segments[segments.length - 2]);
   }
 }
 

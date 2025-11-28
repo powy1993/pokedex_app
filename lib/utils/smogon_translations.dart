@@ -1,3 +1,6 @@
+import 'move_data.dart';
+import 'ability_data.dart';
+
 const Map<String, String> natureTranslations = {
   'Hardy': '勤奋', 'Lonely': '怕寂寞', 'Brave': '勇敢', 'Adamant': '固执', 'Naughty': '顽皮',
   'Bold': '大胆', 'Docile': '坦率', 'Relaxed': '悠闲', 'Impish': '淘气', 'Lax': '乐天',
@@ -33,56 +36,7 @@ const Map<String, String> itemTranslations = {
 };
 
 // 常用特性 (示例)
-const Map<String, String> abilityTranslations = {
-  'Intimidate': '威吓', 'Levitate': '漂浮', 'Flash Fire': '引火',
-  'Pressure': '压迫感', 'Static': '静电', 'Sturdy': '结实',
-  'Blaze': '猛火', 'Torrent': '激流', 'Overgrow': '茂盛',
-  'Swarm': '虫之预感', 'Guts': '毅力', 'Keen Eye': '锐利目光',
-  'Inner Focus': '精神力', 'Synchronize': '同步', 'Trace': '复制',
-  'Sand Stream': '扬沙', 'Drizzle': '降雨', 'Drought': '日照',
-  'Snow Warning': '降雪', 'Speed Boost': '加速', 'Multiscale': '多重鳞片',
-  'Technician': '技术高手', 'Scrappy': '胆量', 'Mold Breaker': '破格',
-  'Prankster': '恶作剧之心', 'Beast Boost': '异兽提升', 'Protosynthesis': '古代活性',
-  'Quark Drive': '夸克充能', 'Supreme Overlord': '大将', 'Purifying Salt': '洁净之盐',
-};
+const Map<String, String> abilityTranslations = abilityNameTranslations;
 
-// 常用招式 (示例 - 数量巨大，仅列举极少部分)
-const Map<String, String> moveTranslations = {
-  'Protect': '守住', 'Substitute': '替身', 'Rest': '睡觉', 'Sleep Talk': '梦话',
-  'Toxic': '剧毒', 'Thunder Wave': '电磁波', 'Will-O-Wisp': '鬼火',
-  'Stealth Rock': '隐形岩', 'Spikes': '撒菱', 'Defog': '清除浓雾',
-  'Rapid Spin': '高速旋转', 'Roost': '羽栖', 'Recover': '自我再生',
-  'Synthesis': '光合作用', 'Moonlight': '月光', 'Morning Sun': '晨光',
-  'Wish': '祈愿', 'Healing Wish': '治愈之愿', 'Teleport': '瞬间移动',
-  'U-turn': '急速折返', 'Volt Switch': '伏特替换', 'Flip Turn': '快速折返',
-  'Knock Off': '拍落', 'Earthquake': '地震', 'Scald': '热水',
-  'Surf': '冲浪', 'Hydro Pump': '水炮', 'Flamethrower': '喷射火焰',
-  'Fire Blast': '大字爆炎', 'Ice Beam': '冰冻光束', 'Blizzard': '暴风雪',
-  'Thunderbolt': '十万伏特', 'Thunder': '打雷', 'Psychic': '精神强念',
-  'Shadow Ball': '暗影球', 'Sludge Bomb': '污泥炸弹', 'Dazzling Gleam': '魔法闪耀',
-  'Moonblast': '月亮之力', 'Close Combat': '近身战', 'Superpower': '蛮力',
-  'Brave Bird': '勇鸟猛攻', 'Acrobatics': '杂技', 'Stone Edge': '尖石攻击',
-  'Rock Slide': '岩崩', 'Iron Head': '铁头', 'Flash Cannon': '加农光炮',
-  'Draco Meteor': '流星群', 'Outrage': '逆鳞', 'Dragon Claw': '龙爪',
-  'Play Rough': '嬉闹', 'Leaf Storm': '飞叶风暴', 'Giga Drain': '终极吸取',
-  'Power Whip': '强力鞭打', 'Solar Beam': '日光束', 'Hurricane': '暴风',
-  'Focus Blast': '真气弹', 'Aura Sphere': '波导弹', 'Dark Pulse': '恶之波动',
-  'Sucker Punch': '突袭', 'Pursuit': '追打', 'Shadow Sneak': '影子偷袭',
-  'Aqua Jet': '水流喷射', 'Ice Shard': '冰砾', 'Bullet Punch': '子弹拳',
-  'Mach Punch': '音速拳', 'Vacuum Wave': '真空波', 'Quick Attack': '电光一闪',
-  'Extreme Speed': '神速', 'Fake Out': '击掌奇袭', 'Encore': '再来一次',
-  'Taunt': '挑衅', 'Torment': '无理取闹', 'Disable': '定身法',
-  'Calm Mind': '冥想', 'Nasty Plot': '诡计', 'Swords Dance': '剑舞',
-  'Dragon Dance': '龙之舞', 'Bulk Up': '健美', 'Curse': '诅咒',
-  'Agility': '高速移动', 'Rock Polish': '岩石打磨', 'Shell Smash': '破壳',
-  'Belly Drum': '腹鼓', 'Trick Room': '戏法空间', 'Tailwind': '顺风',
-  'Light Screen': '光墙', 'Reflect': '反射壁', 'Aurora Veil': '极光幕',
-  'Baton Pass': '接棒', 'Haze': '黑雾', 'Whirlwind': '吹飞',
-  'Roar': '吼叫', 'Dragon Tail': '龙尾', 'Circle Throw': '巴投',
-  'Perish Song': '灭亡之歌', 'Destiny Bond': '同命', 'Explosion': '大爆炸',
-  'Self-Destruct': '自爆', 'Memento': '临别礼物', 'Yawn': '哈欠',
-  'Leech Seed': '寄生种子', 'Pain Split': '分担痛楚', 'Endeavor': '蛮干',
-  'Super Fang': '愤怒门牙', 'Seismic Toss': '地球上投', 'Night Shade': '黑夜魔影',
-  'Foul Play': '欺诈', 'Body Press': '扑击', 'Stored Power': '辅助力量',
-  'Tera Blast': '太晶爆发',
-};
+// 招式翻译 (来自 52poke Wiki)
+const Map<String, String> moveTranslations = moveNameTranslations;

@@ -20,6 +20,7 @@ class _DetailScreenState extends State<DetailScreen> {
   
   PokemonDetail? _detail;
   PokemonSpecies? _species;
+  PokemonVariety? _selectedVariety;
   bool _isLoading = true;
   String? _error;
   
@@ -53,6 +54,27 @@ class _DetailScreenState extends State<DetailScreen> {
     'scarlet-violet': ['scarlet', 'violet'],
   };
 
+  static const Map<String, double> _typeSpriteOffsets = {
+    'normal': 0,
+    'fighting': 20,
+    'flying': 40,
+    'poison': 60,
+    'ground': 80,
+    'rock': 100,
+    'bug': 120,
+    'ghost': 140,
+    'steel': 160,
+    'fire': 180,
+    'water': 200,
+    'grass': 220,
+    'electric': 240,
+    'psychic': 260,
+    'ice': 280,
+    'dragon': 300,
+    'dark': 320,
+    'fairy': 340,
+  };
+
   @override
   void initState() {
     super.initState();
@@ -77,41 +99,11 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Future<void> _loadData() async {
     try {
-      final results = await Future.wait([
-        _service.getPokemonDetail(widget.pokemonId),
-        _service.getPokemonSpecies(widget.pokemonId),
-      ]);
+      final detail = await _service.getPokemonDetail(widget.pokemonId);
+      final species = await _service.getPokemonSpecies(widget.pokemonId);
       
       if (mounted) {
-        final detail = results[0] as PokemonDetail;
-        
-        // Extract available version groups
-        final groups = <String>{};
-        for (var move in detail.moves) {
-          for (var version in move.versionDetails) {
-            groups.add(version.versionGroup);
-          }
-        }
-        
-        final orderedKeys = versionGroupTranslations.keys.toList();
-        final availableGroups = groups.toList();
-        // Sort by generation (newest first)
-        availableGroups.sort((a, b) {
-          final indexA = orderedKeys.indexOf(a);
-          final indexB = orderedKeys.indexOf(b);
-          // If not found in our map, put at the end
-          if (indexA == -1) return 1;
-          if (indexB == -1) return -1;
-          return indexB.compareTo(indexA);
-        });
-
-        setState(() {
-          _detail = detail;
-          _species = results[1] as PokemonSpecies;
-          _availableVersionGroups = availableGroups;
-          _selectedVersionGroup = _availableVersionGroups.first;
-          _isLoading = false;
-        });
+        _processData(detail, species);
       }
     } catch (e) {
       if (mounted) {
@@ -121,6 +113,96 @@ class _DetailScreenState extends State<DetailScreen> {
         });
       }
     }
+  }
+
+  void _processData(PokemonDetail detail, PokemonSpecies species) {
+    final groups = <String>{};
+    for (var move in detail.moves) {
+      for (var version in move.versionDetails) {
+        groups.add(version.versionGroup);
+      }
+    }
+
+    final orderedKeys = versionGroupTranslations.keys.toList();
+    final availableGroups = groups.toList();
+    availableGroups.sort((a, b) {
+      final indexA = orderedKeys.indexOf(a);
+      final indexB = orderedKeys.indexOf(b);
+      if (indexA == -1) return 1;
+      if (indexB == -1) return -1;
+      return indexB.compareTo(indexA);
+    });
+
+    PokemonVariety? currentVariety;
+    try {
+      currentVariety = species.varieties.firstWhere((v) => v.id == detail.id);
+    } catch (_) {
+      if (species.varieties.isNotEmpty) {
+        currentVariety = species.varieties.first;
+      }
+    }
+
+    setState(() {
+      _detail = detail;
+      _species = species;
+      _selectedVariety = currentVariety;
+      _availableVersionGroups = availableGroups;
+      if (_selectedVersionGroup == null ||
+          !availableGroups.contains(_selectedVersionGroup)) {
+        _selectedVersionGroup =
+            availableGroups.isNotEmpty ? availableGroups.first : null;
+      }
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _onVarietyChanged(PokemonVariety? newVariety) async {
+    if (newVariety == null || newVariety.id == _detail?.id) return;
+
+    setState(() {
+      _isLoading = true;
+      _selectedVariety = newVariety;
+    });
+
+    try {
+      final detail = await _service.getPokemonDetail(newVariety.id);
+      if (mounted && _species != null) {
+        _processData(detail, _species!);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _getVarietyLabel(PokemonVariety variety) {
+    if (variety.isDefault) return '一般样子';
+
+    final name = variety.name;
+    if (name.endsWith('-alola')) return '阿罗拉的样子';
+    if (name.endsWith('-galar')) return '伽勒尔的样子';
+    if (name.endsWith('-hisui')) return '洗翠的样子';
+    if (name.endsWith('-paldea')) return '帕底亚的样子';
+    if (name.endsWith('-mega')) return '超级进化';
+    if (name.endsWith('-mega-x')) return '超级进化 X';
+    if (name.endsWith('-mega-y')) return '超级进化 Y';
+    if (name.endsWith('-gmax')) return '超极巨化';
+    if (name.endsWith('-eternamax')) return '无极巨化';
+    if (name.endsWith('-origin')) return '起源形态';
+    if (name.endsWith('-therian')) return '灵兽形态';
+    if (name.endsWith('-incarnate')) return '化身形态';
+    if (name.endsWith('-black')) return '黑色';
+    if (name.endsWith('-white')) return '白色';
+
+    final parts = name.split('-');
+    if (parts.length > 1) {
+      return parts.sublist(1).join(' ').toUpperCase();
+    }
+
+    return name;
   }
 
   List<PokemonMove> _getMovesForSelectedVersion() {
@@ -298,6 +380,40 @@ class _DetailScreenState extends State<DetailScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (_species!.varieties.length > 1)
+                              Container(
+                                height: 32,
+                                margin: const EdgeInsets.only(top: 8),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.2)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<PokemonVariety>(
+                                    value: _selectedVariety,
+                                    isDense: true,
+                                    dropdownColor: bgColor,
+                                    icon: const Icon(Icons.arrow_drop_down,
+                                        color: Colors.white),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    items: _species!.varieties.map((v) {
+                                      return DropdownMenuItem<PokemonVariety>(
+                                        value: v,
+                                        child: Text(_getVarietyLabel(v)),
+                                      );
+                                    }).toList(),
+                                    onChanged: _onVarietyChanged,
+                                  ),
+                                ),
+                              ),
                             const SizedBox(height: 10),
                             Wrap(
                               spacing: 8,
@@ -309,13 +425,41 @@ class _DetailScreenState extends State<DetailScreen> {
                                     color: typeColors[type] ?? Colors.grey,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: Text(
-                                    typeTranslations[type] ?? type,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (_typeSpriteOffsets.containsKey(type))
+                                        Container(
+                                          width: 20,
+                                          height: 20,
+                                          margin:
+                                              const EdgeInsets.only(right: 4),
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                              image:
+                                                  const CachedNetworkImageProvider(
+                                                'https://media.52poke.com/wiki/8/87/MST_SV.webp',
+                                              ),
+                                              fit: BoxFit.none,
+                                              alignment: Alignment(
+                                                0.0,
+                                                -1.0 +
+                                                    (_typeSpriteOffsets[type]! /
+                                                        200.0),
+                                              ),
+                                              scale: 2.5,
+                                            ),
+                                          ),
+                                        ),
+                                      Text(
+                                        typeTranslations[type] ?? type,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 );
                               }).toList(),
@@ -771,10 +915,39 @@ class MoveTableRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pre-calculate static translation
+    String staticName = move.name;
+    try {
+      final normalizedSlug = move.name.replaceAll('-', ' ').toLowerCase();
+      final key = moveTranslations.keys.firstWhere(
+        (k) => k.toLowerCase() == normalizedSlug,
+        orElse: () => '',
+      );
+      if (key.isNotEmpty) {
+        staticName = moveTranslations[key]!;
+      }
+    } catch (_) {}
+
     return FutureBuilder<Map<String, dynamic>>(
       future: _service.getMoveDetails(move.url, versionGroup: move.versionGroup),
       builder: (context, snapshot) {
-        final name = snapshot.data?['name'] ?? move.name;
+        String name = staticName;
+        final apiName = snapshot.data?['name'];
+
+        if (apiName != null && apiName != 'Unknown') {
+          final isApiChinese = RegExp(r'[\u4e00-\u9fa5]').hasMatch(apiName);
+          final isStaticChinese =
+              RegExp(r'[\u4e00-\u9fa5]').hasMatch(staticName);
+
+          if (isApiChinese) {
+            name = apiName;
+          } else if (isStaticChinese) {
+            name = staticName;
+          } else {
+            name = apiName;
+          }
+        }
+
         final damageClass = snapshot.data?['damageClass'] ?? 'status';
         final type = snapshot.data?['type'] ?? 'normal';
         final power = snapshot.data?['power'];
@@ -1046,7 +1219,15 @@ class _CompetitiveSectionState extends State<CompetitiveSection> {
         runSpacing: 4,
         children: items.asMap().entries.map((entry) {
           final index = entry.key;
-          final item = entry.value.toString();
+          var item = entry.value.toString();
+
+          // Handle case-insensitivity for types
+          if (category == 'type' && !manual.containsKey(item)) {
+            if (manual.containsKey(item.toLowerCase())) {
+              item = item.toLowerCase();
+            }
+          }
+
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1068,6 +1249,7 @@ class _CompetitiveSectionState extends State<CompetitiveSection> {
     final itemsList = moveset['items'] as List;
     final abilitiesList = moveset['abilities'] as List;
     final naturesList = moveset['natures'] as List;
+    final teraTypesList = (moveset['teratypes'] as List?) ?? [];
     
     // EVs
     final evConfigs = moveset['evconfigs'] as List;
@@ -1114,6 +1296,9 @@ class _CompetitiveSectionState extends State<CompetitiveSection> {
           const Divider(height: 24),
           _buildRow('道具', buildTermList(itemsList, 'item', itemTranslations)),
           _buildRow('特性', buildTermList(abilitiesList, 'ability', abilityTranslations)),
+          if (teraTypesList.isNotEmpty)
+            _buildRow(
+                '太晶', buildTermList(teraTypesList, 'type', typeTranslations)),
           _buildRow('性格', buildTermList(naturesList, 'nature', natureTranslations, modifiers: natureModifiers)),
           _buildRow('努力值', Text(evText)),
           const SizedBox(height: 12),
@@ -1209,9 +1394,19 @@ class TranslatedTerm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Check manual translation first
+    // 1. Check manual translation first (Exact match)
     if (manualTranslations.containsKey(term)) {
       return Text(manualTranslations[term]!);
+    }
+
+    // 1.5 Check case-insensitive match
+    try {
+      final key = manualTranslations.keys.firstWhere(
+        (k) => k.toLowerCase() == term.toLowerCase(),
+      );
+      return Text(manualTranslations[key]!);
+    } catch (_) {
+      // Not found in manual map
     }
 
     // 2. Async fetch
