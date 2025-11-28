@@ -14,8 +14,10 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
         title: const Text('宝可梦图鉴'),
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -51,6 +53,7 @@ class HomeScreen extends StatelessWidget {
                 }
 
                 return ListView.builder(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.all(8),
                   itemCount: list.length,
                   itemBuilder: (context, index) {
@@ -64,6 +67,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
