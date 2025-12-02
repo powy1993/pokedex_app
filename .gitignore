@@ -43,5 +43,30 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# MCP generated files
+# MCP generated files (contain local paths and user info)
 mcp_server/claude_config.json
+mcp_server/codebuddy_config.json
+mcp_server/mcp_config.json
+
+# Local configuration files (contain user paths)
+android/local.properties
+ohos/local.properties
+ohos/package.json
+ohos/package-lock.json
+ios/Flutter/Generated.xcconfig
+macos/Flutter/ephemeral/
+
+# IDE and editor files (may contain user preferences)
+.vscode/
+*.code-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
