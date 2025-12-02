@@ -44,13 +44,42 @@
 |:---:|:---:|:---:|
 | *(此处放置截图)* | *(此处放置截图)* | *(此处放置截图)* |
 
+## 🤖 AI 辅助开发 (NEW!)
+
+本项目已集成 **MCP (Model Context Protocol)** 功能，让 AI 助手能够深度理解和优化你的代码！
+
+### 功能特性
+- 🔍 **智能代码分析**: 6 个专业工具分析项目结构、性能和最佳实践
+- 📊 **性能优化建议**: AI 提供针对性的 Widget 优化方案
+- 📚 **自动文档生成**: 为代码生成专业文档注释
+- 🎯 **重构指导**: AI 辅助重构和架构改进
+- ✨ **实时代码审查**: 检查代码是否符合 Flutter 最佳实践
+
+### 快速开始
+```bash
+# 1. 安装依赖
+fvm flutter pub get
+
+# 2. 运行测试（验证 MCP 功能）
+fvm dart run scripts/test_mcp.dart
+
+# 3. 在 CodeBuddy 中直接使用
+# CodeBuddy 会自动识别 MCP 服务器，无需配置！
+# 直接输入：使用 analyze_project 工具分析项目
+```
+
+📖 **完整文档**: 查看 [MCP_INTEGRATION.md](MCP_INTEGRATION.md) 和 `.mcp/` 目录
+
 ## 🛠️ 技术栈
 
 * **框架**: [Flutter](https://flutter.dev/) (Dart)
 * **状态管理**: [Provider](https://pub.dev/packages/provider)
 * **网络请求**: [http](https://pub.dev/packages/http)
 * **图片缓存**: [cached_network_image](https://pub.dev/packages/cached_network_image)
-* **数据源**: [PokeAPI](https://pokeapi.co/) (基础数据), [Smogon](https://www.smogon.com/) (对战数据)
+* **数据源**:
+  * [PokeAPI](https://pokeapi.co/) (基础数据)
+  * [Smogon](https://www.smogon.com/) (对战数据)
+* **AI 集成**: [MCP](https://modelcontextprotocol.io) (代码优化与分析)
 
 ## 🚀 快速开始
 
