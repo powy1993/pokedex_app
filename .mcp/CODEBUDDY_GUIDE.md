@@ -13,7 +13,7 @@ CodeBuddy 会**自动识别**项目中的 MCP 服务器，无需手动配置！�
 确保依赖已安装：
 
 ```bash
-cd /Users/wangyuxing/Desktop/pokedex/pokedex_app
+cd /path/to/pokedex_app
 fvm flutter pub get
 ```
 

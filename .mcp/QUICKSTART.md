@@ -5,7 +5,7 @@
 ## 第 1 步: 安装依赖
 
 ```bash
-cd /Users/wangyuxing/Desktop/pokedex/pokedex_app
+cd /path/to/pokedex_app
 fvm flutter pub get
 ```
 
@@ -33,9 +33,9 @@ CodeBuddy 已经自动检测到 MCP 服务器，你可以直接开始使用。
 {
   "name": "pokedex-flutter",
   "command": "bash",
-  "args": ["/Users/wangyuxing/Desktop/pokedex/pokedex_app/scripts/start_mcp_server.sh"],
+  "args": ["/path/to/pokedex_app/scripts/start_mcp_server.sh"],
   "env": {
-    "PROJECT_ROOT": "/Users/wangyuxing/Desktop/pokedex/pokedex_app"
+    "PROJECT_ROOT": "/path/to/pokedex_app"
   }
 }
 ```

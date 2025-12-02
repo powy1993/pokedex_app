@@ -1,6 +1,5 @@
 # CodeBuddy MCP 功能验证报告 ✅
 
-**验证日期**: 2025-12-02  
 **验证平台**: CodeBuddy  
 **验证状态**: ✅ 通过
 
@@ -64,8 +63,6 @@
 $ fvm dart run scripts/test_mcp.dart
 
 === Flutter Pokedex MCP 测试 ===
-
-项目路径: /Users/wangyuxing/Desktop/pokedex/pokedex_app
 
 --- 测试 1: 检查文件结构 ---
 ✓ lib/mcp/mcp_server.dart
@@ -288,7 +285,6 @@ cat .mcp/QUICKSTART.md
 
 所有功能已验证完成，可以在 CodeBuddy 中正常使用！
 
-**验证完成时间**: 2025-12-02  
 **验证人员**: AI 助手  
 **验证状态**: ✅ 通过
 
