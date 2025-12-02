@@ -76,7 +76,9 @@ fvm dart run scripts/test_mcp.dart
 * **状态管理**: [Provider](https://pub.dev/packages/provider)
 * **网络请求**: [http](https://pub.dev/packages/http)
 * **图片缓存**: [cached_network_image](https://pub.dev/packages/cached_network_image)
-* **数据源**: [PokeAPI](https://pokeapi.co/) (基础数据), [Smogon](https://www.smogon.com/) (对战数据)
+* **数据源**:
+  * [PokeAPI](https://pokeapi.co/) (基础数据)
+  * [Smogon](https://www.smogon.com/) (对战数据)
 * **AI 集成**: [MCP](https://modelcontextprotocol.io) (代码优化与分析)
 
 ## 🚀 快速开始
