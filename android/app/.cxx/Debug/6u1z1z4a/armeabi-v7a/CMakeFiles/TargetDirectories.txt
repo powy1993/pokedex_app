@@ -1,2 +1,0 @@
-/Users/wangyuxing/Desktop/pokedex/pokedex_app/android/app/.cxx/Debug/6u1z1z4a/armeabi-v7a/CMakeFiles/edit_cache.dir
-/Users/wangyuxing/Desktop/pokedex/pokedex_app/android/app/.cxx/Debug/6u1z1z4a/armeabi-v7a/CMakeFiles/rebuild_cache.dir
