@@ -3,10 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/pokemon_provider.dart';
 import '../utils/pokemon_names_cn.dart';
-import '../services/poke_service.dart';
 import '../models/pokemon.dart';
-import '../utils/type_colors.dart';
-import '../utils/translations.dart';
 import 'detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -31,14 +28,23 @@ class HomeScreen extends StatelessWidget {
         ),
         body: Column(
         children: [
+            // 搜索框
           Padding(
-            padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(16.0),
             child: TextField(
-              decoration: const InputDecoration(
+                decoration: InputDecoration(
                 labelText: '搜索宝可梦 (名称或ID)',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  hintText: '输入宝可梦名称或编号...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[900]
+                      : Colors.grey[100],
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               onChanged: (value) {
                 Provider.of<PokemonProvider>(context, listen: false)
@@ -46,29 +52,97 @@ class HomeScreen extends StatelessWidget {
               },
             ),
           ),
+          
+            // 列表
           Expanded(
             child: Consumer<PokemonProvider>(
               builder: (context, provider, child) {
                 if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('正在加载宝可梦数据...'),
+                        ],
+                      ),
+                    );
+                  }
+
+                  if (provider.error != null) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              size: 48, color: Colors.red),
+                          const SizedBox(height: 16),
+                          Text('加载失败'),
+                          const SizedBox(height: 8),
+                          Text(
+                            provider.error!,
+                            style: const TextStyle(color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => provider.refresh(),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('重试'),
+                          ),
+                        ],
+                      ),
+                    );
                 }
 
                 final list = provider.filteredList;
 
                 if (list.isEmpty) {
-                  return const Center(child: Text('未找到宝可梦'));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off,
+                              size: 64, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(
+                            '未找到宝可梦',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '尝试搜索其他名称或编号',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                 }
 
-                return ListView.builder(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.all(8),
-                  itemCount: list.length,
-                  itemBuilder: (context, index) {
-                    final pokemon = list[index];
-                    final nameCn = pokemonNamesCn[pokemon.name.toLowerCase()] ?? pokemon.name;
-                    
-                    return PokemonListItem(pokemon: pokemon, nameCn: nameCn);
-                  },
+                  return RefreshIndicator(
+                    onRefresh: () => provider.refresh(),
+                    child: ListView.builder(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        final pokemon = list[index];
+                        final nameCn =
+                            pokemonNamesCn[pokemon.name.toLowerCase()] ??
+                                pokemon.name;
+
+                        return PokemonListItem(
+                            pokemon: pokemon, nameCn: nameCn);
+                      },
+                    ),
                 );
               },
             ),
@@ -80,145 +154,148 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class PokemonListItem extends StatefulWidget {
+class PokemonListItem extends StatelessWidget {
   final PokemonListEntry pokemon;
   final String nameCn;
 
   const PokemonListItem({super.key, required this.pokemon, required this.nameCn});
 
   @override
-  State<PokemonListItem> createState() => _PokemonListItemState();
-}
-
-class _PokemonListItemState extends State<PokemonListItem> {
-  final PokeService _service = PokeService();
-  List<String>? _types;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTypes();
-  }
-
-  @override
-  void didUpdateWidget(PokemonListItem oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.pokemon.id != widget.pokemon.id) {
-      setState(() {
-        _types = null;
-      });
-      _loadTypes();
-    }
-  }
-
-  Future<void> _loadTypes() async {
-    try {
-      final detail = await _service.getPokemonDetail(widget.pokemon.id);
-      if (mounted) {
-        setState(() {
-          _types = detail.types;
-        });
-      }
-    } catch (e) {
-      // Handle error or ignore
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DetailScreen(pokemonId: widget.pokemon.id),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border(
-              bottom: BorderSide(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1))),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+          width: 1,
         ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetailScreen(pokemonId: pokemon.id),
+            ),
+          );
+        },
         child: Row(
           children: [
-            // Number
-            SizedBox(
-              width: 40,
-              child: Text(
-                '#${widget.pokemon.id.toString().padLeft(3, '0')}',
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+            // 大图片 - 紧贴左边框
+            Hero(
+              tag: 'pokemon_${pokemon.id}',
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            Colors.white.withValues(alpha: 0.08),
+                            Colors.white.withValues(alpha: 0.03),
+                          ]
+                        : [
+                            Colors.grey[100]!,
+                            Colors.grey[50]!,
+                          ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark
+                          ? Colors.black.withValues(alpha: 0.3)
+                          : Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(2, 0),
+                    ),
+                  ],
+                ),
+                child: CachedNetworkImage(
+                  imageUrl: pokemon.imageUrl,
+                  placeholder: (context, url) => Center(
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Icon(
+                      Icons.catching_pokemon,
+                      size: 48,
+                      color: Colors.grey[400]),
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            
-            // Image (1/4 size - assuming original was large, let's say 50x50 is good for list)
-            SizedBox(
-              width: 50,
-              height: 50,
-              child: CachedNetworkImage(
-                imageUrl: widget.pokemon.imageUrl,
-                placeholder: (context, url) => Container(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.grey[200]),
-                errorWidget: (context, url, error) => const Icon(Icons.error, size: 20, color: Colors.grey),
-                fit: BoxFit.contain,
-              ),
-            ),
-            const SizedBox(width: 16),
 
-            // Names
+            // 序号和名称
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.nameCn,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    widget.pokemon.name,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Types
-            if (_types != null)
-              Row(
-                children: _types!.map((type) {
-                  return Container(
-                    margin: const EdgeInsets.only(left: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: typeColors[type] ?? Colors.grey,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      typeTranslations[type] ?? type,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 序号 - 放在名称上方
+                    Text(
+                      '#${pokemon.id.toString().padLeft(3, '0')}',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[600] : Colors.grey[500],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.8,
                       ),
                     ),
-                  );
-                }).toList(),
+                    const SizedBox(height: 4),
+
+                    // 中文名 - 主要信息
+                    Text(
+                      nameCn,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+
+                    // 英文名
+                    Text(
+                      pokemon.name,
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[500] : Colors.grey[600],
+                        fontSize: 13,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ),
+
+            // 箭头图标
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Icon(
+                Icons.chevron_right,
+                color: isDark ? Colors.grey[600] : Colors.grey[400],
+                size: 28,
+              ),
+            ),
           ],
         ),
       ),

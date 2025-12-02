@@ -1,0 +1,46 @@
+{
+  "name": "pokedex-flutter",
+  "description": "Flutter Pokedex 项目的 MCP 服务器，提供代码分析、优化建议和项目上下文",
+  "version": "1.0.0",
+  "server": {
+    "command": "bash",
+    "args": ["scripts/start_mcp_server.sh"],
+    "cwd": "/Users/wangyuxing/Desktop/pokedex/pokedex_app",
+    "env": {
+      "PROJECT_ROOT": "/Users/wangyuxing/Desktop/pokedex/pokedex_app"
+    }
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": true
+  },
+  "tools": [
+    {
+      "name": "analyze_project",
+      "description": "分析整个 Flutter 项目的结构、依赖和复杂度"
+    },
+    {
+      "name": "analyze_widget",
+      "description": "深入分析特定 Widget 文件的性能和优化建议"
+    },
+    {
+      "name": "suggest_optimizations",
+      "description": "为指定文件提供代码优化建议"
+    },
+    {
+      "name": "find_unused_code",
+      "description": "查找项目中可能未使用的代码和依赖"
+    },
+    {
+      "name": "check_best_practices",
+      "description": "检查代码是否遵循 Flutter 最佳实践"
+    },
+    {
+      "name": "generate_documentation",
+      "description": "为指定文件或类生成文档注释"
+    }
+  ],
+  "auto_detect": true,
+  "project_type": "flutter"
+}

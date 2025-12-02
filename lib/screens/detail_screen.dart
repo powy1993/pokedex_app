@@ -108,7 +108,7 @@ class _DetailScreenState extends State<DetailScreen> {
           evolutionChain =
               await _service.getEvolutionChain(species.evolutionChainUrl);
         } catch (e) {
-          print('Error loading evolution chain: $e');
+          // Error loading evolution chain, continue without it
         }
       }
       
@@ -542,7 +542,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white.withOpacity(0.05)
+                            ? Colors.white.withValues(alpha: 0.05)
                             : Colors.grey[50],
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -757,7 +757,7 @@ class _DetailScreenState extends State<DetailScreen> {
               child: LinearProgressIndicator(
                 value: stat.baseStat / 255,
                 backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.1)
+                    ? Colors.white.withValues(alpha: 0.1)
                     : Colors.grey[200],
                 color: color,
                 minHeight: 6,
@@ -818,11 +818,11 @@ class AbilityTile extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withOpacity(0.05)
+                ? Colors.white.withValues(alpha: 0.05)
                 : Colors.grey[50],
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: Theme.of(context).dividerColor.withOpacity(0.1)),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -842,7 +842,7 @@ class AbilityTile extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white.withOpacity(0.1)
+                            ? Colors.white.withValues(alpha: 0.1)
                             : Colors.grey[200],
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -885,7 +885,7 @@ class MoveTable extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withOpacity(0.05)
+                ? Colors.white.withValues(alpha: 0.05)
                 : Colors.grey[200],
             borderRadius: BorderRadius.circular(8),
           ),
@@ -1024,7 +1024,7 @@ class MoveTableRow extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border(
                   bottom: BorderSide(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1))),
+                      color: Theme.of(context).dividerColor.withValues(alpha: 0.1))),
             ),
             child: Row(
               children: [
@@ -1322,11 +1322,11 @@ class _CompetitiveSectionState extends State<CompetitiveSection> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.white.withOpacity(0.05)
+            ? Colors.white.withValues(alpha: 0.05)
             : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border:
-            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+            Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1695,7 +1695,7 @@ class EvolutionNodeWidget extends StatelessWidget {
                 color: isCurrent
                     ? Colors.blue.withValues(alpha: 0.1)
                     : (Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withOpacity(0.05)
+                        ? Colors.white.withValues(alpha: 0.05)
                         : Colors.grey[100]),
                 shape: BoxShape.circle,
                 border:

@@ -7,9 +7,39 @@ import '../utils/ability_data.dart';
 
 class PokeService {
   static const String baseUrl = 'https://pokeapi.co/api/v2';
+  
+  // 单例模式
+  static final PokeService _instance = PokeService._internal();
+  factory PokeService() => _instance;
+  PokeService._internal();
 
   // Cache for translations to avoid repeated API calls
   final Map<String, String> _translationCache = {};
+  
+  // Cache for Pokemon details
+  final Map<int, PokemonDetail> _detailCache = {};
+  
+  // Cache for Pokemon species
+  final Map<int, PokemonSpecies> _speciesCache = {};
+  
+  // Cache for evolution chains
+  final Map<String, EvolutionChain> _evolutionChainCache = {};
+  
+  // Cache for ability info
+  final Map<String, Map<String, String>> _abilityCache = {};
+  
+  // Cache for move details
+  final Map<String, Map<String, dynamic>> _moveCache = {};
+  
+  // 清除所有缓存
+  void clearCache() {
+    _translationCache.clear();
+    _detailCache.clear();
+    _speciesCache.clear();
+    _evolutionChainCache.clear();
+    _abilityCache.clear();
+    _moveCache.clear();
+  }
 
   Future<List<PokemonListEntry>> getPokemonList({int limit = 20, int offset = 0}) async {
     final response = await http.get(Uri.parse('$baseUrl/pokemon?limit=$limit&offset=$offset'));
@@ -52,36 +82,65 @@ class PokeService {
   }
 
   Future<PokemonDetail> getPokemonDetail(int id) async {
+    // 检查缓存
+    if (_detailCache.containsKey(id)) {
+      return _detailCache[id]!;
+    }
+    
     final response = await http.get(Uri.parse('$baseUrl/pokemon/$id'));
 
     if (response.statusCode == 200) {
-      return PokemonDetail.fromJson(json.decode(response.body));
+      final detail = PokemonDetail.fromJson(json.decode(response.body));
+      // 缓存结果
+      _detailCache[id] = detail;
+      return detail;
     } else {
       throw Exception('Failed to load pokemon detail $id');
     }
   }
 
   Future<PokemonSpecies> getPokemonSpecies(int id) async {
+    // 检查缓存
+    if (_speciesCache.containsKey(id)) {
+      return _speciesCache[id]!;
+    }
+    
     final response = await http.get(Uri.parse('$baseUrl/pokemon-species/$id'));
 
     if (response.statusCode == 200) {
-      return PokemonSpecies.fromJson(json.decode(response.body));
+      final species = PokemonSpecies.fromJson(json.decode(response.body));
+      // 缓存结果
+      _speciesCache[id] = species;
+      return species;
     } else {
       throw Exception('Failed to load pokemon species $id');
     }
   }
 
   Future<EvolutionChain> getEvolutionChain(String url) async {
+    // 检查缓存
+    if (_evolutionChainCache.containsKey(url)) {
+      return _evolutionChainCache[url]!;
+    }
+    
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
-      return EvolutionChain.fromJson(json.decode(response.body));
+      final chain = EvolutionChain.fromJson(json.decode(response.body));
+      // 缓存结果
+      _evolutionChainCache[url] = chain;
+      return chain;
     } else {
       throw Exception('Failed to load evolution chain');
     }
   }
 
   Future<Map<String, String>> getAbilityInfo(String url) async {
+    // 检查缓存
+    if (_abilityCache.containsKey(url)) {
+      return _abilityCache[url]!;
+    }
+    
     // Resolve local data
     Map<String, dynamic>? localData;
     try {
@@ -130,21 +189,29 @@ class PokeService {
           flavorText = localData['description'];
         }
 
-        return {'name': name, 'flavorText': flavorText};
+        final result = {'name': name, 'flavorText': flavorText};
+        // 缓存结果
+        _abilityCache[url] = result;
+        return result;
       }
     } catch (e) {
-      print('Error fetching ability info: $e');
+      // Error fetching ability info, will use local data
     }
 
     // Fallback to local data
     if (localData != null) {
-      return {
-        'name': localData['name'],
-        'flavorText': localData['description']
+      final result = <String, String>{
+        'name': localData['name'].toString(),
+        'flavorText': localData['description'].toString()
       };
+      // 缓存结果
+      _abilityCache[url] = result;
+      return result;
     }
 
-    return {'name': 'Unknown', 'flavorText': ''};
+    final fallback = <String, String>{'name': 'Unknown', 'flavorText': ''};
+    _abilityCache[url] = fallback;
+    return fallback;
   }
 
   Future<List<PokemonListEntry>> getAllPokemon() async {
@@ -235,7 +302,7 @@ class PokeService {
                       machineData['item']['name'].toString().toUpperCase();
                 }
               } catch (e) {
-                print('Error fetching machine data: $e');
+                // Error fetching machine data, continue without it
               }
             }
           }
@@ -264,7 +331,7 @@ class PokeService {
         };
       }
     } catch (e) {
-      print('Error fetching move details: $e');
+      // Error fetching move details, will use local data
     }
 
     // Fallback to local data if API fails
@@ -314,7 +381,7 @@ class PokeService {
         return data['strategies'] ?? [];
       }
     } catch (e) {
-      print('Error fetching Smogon data: $e');
+      // Error fetching Smogon data
     }
     return [];
   }

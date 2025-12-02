@@ -9,10 +9,12 @@ class PokemonProvider with ChangeNotifier {
   List<PokemonListEntry> _pokemonList = [];
   bool _isLoading = false;
   String _searchQuery = '';
+  String? _error;
 
   List<PokemonListEntry> get pokemonList => _pokemonList;
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
+  String? get error => _error;
 
   List<PokemonListEntry> get filteredList {
     if (_searchQuery.isEmpty) {
@@ -34,18 +36,33 @@ class PokemonProvider with ChangeNotifier {
   }
 
   Future<void> fetchAllPokemon() async {
+    if (_pokemonList.isNotEmpty) {
+      // 已经加载过，不重复加载
+      return;
+    }
+    
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
       _pokemonList = await _service.getAllPokemon();
+      _error = null;
     } catch (e) {
       debugPrint('Error fetching pokemon: $e');
+      _error = '加载失败：$e';
       _pokemonList = [];
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // 手动刷新
+  Future<void> refresh() async {
+    _pokemonList = [];
+    _service.clearCache();
+    await fetchAllPokemon();
   }
 
   void setSearchQuery(String query) {
